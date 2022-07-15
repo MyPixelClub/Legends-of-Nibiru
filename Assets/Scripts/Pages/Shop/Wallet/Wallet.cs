@@ -9,8 +9,6 @@ public abstract class Wallet : MonoBehaviour
 {    
     [SerializeField] private TMP_Text _textMoney;
     [SerializeField] protected int _amountMoney;
-
-    [SerializeField] protected Farm _farm;
     [SerializeField] protected QuestPrizeWindow _questPrizeWindow;
     [SerializeField] protected RoulettePage roulettePage;
     
@@ -27,7 +25,7 @@ public abstract class Wallet : MonoBehaviour
     protected void RefreshText() => 
         _textMoney.text = _amountMoney.ToString();
 
-    virtual protected void WithdrawСurrency(int money)
+    virtual public void WithdrawСurrency(int money)
     {
         if (money > _amountMoney)
             throw new InvalidOperationException();
@@ -36,7 +34,7 @@ public abstract class Wallet : MonoBehaviour
         UpdateСurrencyText();
     }
 
-    virtual protected void AddСurrency(int countMoney)
+    virtual public void AddСurrency(int countMoney)
     {
         _amountMoney += countMoney;
         UpdateСurrencyText();
