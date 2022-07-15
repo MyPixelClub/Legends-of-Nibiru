@@ -16,21 +16,20 @@ public class GoldWallet : Wallet
         _amountMoney = _data.PlayerData.Coins;
 
         _confirmWindow.OnWithdrawMoney += WithdrawСurrency;
-        _farm.OnAcceruGold += AddСurrency;
         _questPrizeWindow.OnAcceruGold += AddСurrency;
         roulettePage.OnReceivedGold += AddСurrency;
         
         RefreshText();
     }
 
-    protected override void AddСurrency(int countMoney)
+    public override void AddСurrency(int countMoney)
     {
         base.AddСurrency(countMoney);
 
         _data.SetCoinCount(_amountMoney);
     }
 
-    protected override void WithdrawСurrency(int money)
+    public override void WithdrawСurrency(int money)
     {
         base.WithdrawСurrency(money);
 

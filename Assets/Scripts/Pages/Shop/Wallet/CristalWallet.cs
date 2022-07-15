@@ -10,8 +10,6 @@ public class CristalWallet : Wallet
     {
         _amountMoney = _data.PlayerData.Crystals;
         
-        _shop.OnCristalBuy += AddСurrency;
-        _farm.OnAcceruCristal += AddСurrency;
         _questPrizeWindow.OnAcceruCristal += AddСurrency;
         roulettePage.OnReceivedCristal += AddСurrency;
         roulettePage.OnBuyRouletteSpin += WithdrawСurrency;
@@ -19,14 +17,14 @@ public class CristalWallet : Wallet
         RefreshText();
     }
 
-    protected override void AddСurrency(int countMoney)
+    public override void AddСurrency(int countMoney)
     {
         base.AddСurrency(countMoney);
 
         _data.SetCrystalsCount(_amountMoney);
     }
 
-    protected override void WithdrawСurrency(int money)
+    public override void WithdrawСurrency(int money)
     {
         base.WithdrawСurrency(money);
 

@@ -1,115 +1,113 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
-using UnityEngine.Events;
-using UnityEngine.UI;
 
 public class Farm : MonoBehaviour
 {
-    public event System.Func<Prize, PrizeCell> OnAddNewPrize;
+    [SerializeField] private TMP_Text _status;
+    [SerializeField] private GameObject _statusWindow;
+    public GameObject StatusWindow => _statusWindow;
+    private Place _place;
 
-    public event UnityAction<int> OnAcceruGold;
-    public event UnityAction<int> OnAcceruCristal;
-
-    [SerializeField] private List<Prize> _variationFarmPrizes;
-
-    [SerializeField] private TMP_Text _timer;
-
-    [SerializeField] private GameObject _getButton, _startButton, _chooseCharacterButton;
-
-    [SerializeField] private Image _nftImage;
-
-    private bool _isNFTSet;
-    private bool _isFarm;
-
-    private List<PrizeCell> _prizes = new();
-
-    public void SetNFT(NFT nft)
+    private DateTime? _startFarmTime
     {
-        _nftImage.sprite = nft.Sprite;
-        _isNFTSet = true;
-        _startButton.SetActive(true);
+        get
+        {
+            string data = PlayerPrefs.GetString("startFarmTime" + _place.Data.LocationName, null);
+
+            if (string.IsNullOrEmpty(data) == false)
+                return DateTime.Parse(data);
+
+            return null;
+        }
+        set
+        {
+            if (value != null)
+                PlayerPrefs.SetString("startFarmTime" + _place.Data.LocationName, value.ToString());
+            else
+                PlayerPrefs.DeleteKey("startFarmTime" + _place.Data.LocationName);
+        }
+    }
+
+    private bool _canClaimReward;
+    private float _claimCoolDown = 24f / 24 / 60 / 6;
+
+    private TimeSpan _currentClaimCooldown;
+
+    public string Status => _status.text;
+    public bool CanClaimRewared => _canClaimReward;
+
+    private void Awake()
+    {
+        _place = GetComponent<Place>();
+    }
+
+    private void OnEnable()
+    {
+        _statusWindow.SetActive(true);
+
+        if (_place.IsSet)
+            StartCoroutine(Farming());
+        else
+            _statusWindow.SetActive(false);
+    }
+
+    private void OnDisable()
+    {
+        StopAllCoroutines();
+    }
+
+    public void ClaimRewards()
+    {
+        _startFarmTime = null;
+        _statusWindow.SetActive(false);
     }
 
     public void StartFarm()
     {
-        if (_isFarm == false && _isNFTSet)
-        {
-            _startButton.SetActive(false);
-            _chooseCharacterButton.SetActive(false);
-            StartCoroutine(GetPrizes());
-            StartCoroutine(Timer());
-        }
+        _statusWindow.SetActive(true);
+        _startFarmTime = DateTime.UtcNow;
+        StartCoroutine(Farming());
     }
 
-    public void AccruePrizes()
+    private IEnumerator Farming()
     {
-        if (_prizes.Count != 10) throw new System.InvalidOperationException();
-
-        foreach (var prize in _prizes)
+        while (true)
         {
-            switch (prize.TypePrize)
-            {
-                case PrizeType.Gold:
-                    OnAcceruGold?.Invoke(prize.AmountPrize);
-                    break;
-                case PrizeType.Cristal:
-                    OnAcceruCristal?.Invoke(prize.AmountPrize);
-                    break;
-                default:
-                    throw new System.ArgumentException();
-            }
-        }
-
-        _prizes.Clear();
-
-        _getButton.SetActive(false);
-        _startButton.SetActive(true);
-    }
-
-    private IEnumerator GetPrizes()
-    {
-        _isFarm = true;
-
-        yield return new WaitForSeconds(2);
-        _prizes.Add(OnAddNewPrize?.Invoke(GetRandomPrize()));
-
-        while (_prizes.Count < 10)
-        {
-            yield return new WaitForSeconds(30);
-
-            _prizes.Add(OnAddNewPrize?.Invoke(GetRandomPrize()));
-        }
-
-        _getButton.SetActive(true);
-        _chooseCharacterButton.SetActive(true);
-
-        _isFarm = false;
-    }
-
-    private IEnumerator Timer()
-    {
-        int maxSeconds = 272;
-        _timer.gameObject.SetActive(true);
-        _timer.text = "Left: " + maxSeconds + " seconds";
-
-        while (maxSeconds > 0)
-        {
+            UpdateRewardsState();
             yield return new WaitForSeconds(1);
-            _timer.text = ("Left: " + ((maxSeconds -= 1).ToString() + " seconds"));
         }
     }
 
-    private Prize GetRandomPrize()
+    private void UpdateRewardsState()
     {
-        var farmPrize = _variationFarmPrizes[Random.Range(0, _variationFarmPrizes.Count)];
-        farmPrize.AmountPrize = GetRandomPrizeValue();
-        return farmPrize;
+        _canClaimReward = false;
+
+        if (_startFarmTime.HasValue)
+        {
+            var timeSpan = DateTime.UtcNow - _startFarmTime.Value;
+        
+            if (timeSpan.TotalHours > _claimCoolDown)
+                _canClaimReward = true;
+        }
+
+        UpdateRewardsUI();
     }
 
-    private int GetRandomPrizeValue()
+    private void UpdateRewardsUI()
     {
-        return Random.Range(1, 8);
+        if (_canClaimReward == false)
+        {
+            var nextClaimTime = _startFarmTime.Value.AddHours(_claimCoolDown);
+            _currentClaimCooldown = nextClaimTime - DateTime.UtcNow;
+
+            _status.text = $"Left {_currentClaimCooldown.Seconds} S. {_currentClaimCooldown.Minutes} Min.";
+        }
+        else
+        {
+            _status.text = "Claim your rewards";
+        }        
     }
 }
