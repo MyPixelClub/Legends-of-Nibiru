@@ -11,25 +11,29 @@ public enum PrizeType
 }
 
 [System.Serializable]
-public class Prize 
+public class Prize : IRoulette
 {
-    public Sprite Sprite;
-    public int MinNumberPrize;
-    public int MaxNumberPrize;
-    public int AmountPrize => Random.Range(MinNumberPrize, MaxNumberPrize);
+    [SerializeField] private Sprite GoldSprite, CristalSprite;
+
+    [SerializeField] private int _amountPrize;
+    public virtual int AmountPrize => _amountPrize;
     public PrizeType TypePrize;
 
-    public Sprite UIIcon => Sprite;
+    public Sprite UIIcon 
+    {
+        get 
+        {
+            return TypePrize == PrizeType.Gold ? GoldSprite : CristalSprite;
+        }
+    }
     public string Description => TypePrize.ToString();
 
-    //public void TakeItem()
-    //{
-    //    var roulettePage = FindObjectOfType<RoulettePage>().gameObject.GetComponent<RoulettePage>();
+    public void TakeItem(RoulettePage roulettePage)
+    {
+        if (TypePrize == PrizeType.Cristal)
+            roulettePage.AccrueCristal(AmountPrize);
 
-    //    if (TypePrize == PrizeType.Cristal)
-    //        roulettePage.AccrueCristal();
-
-    //    if (TypePrize == PrizeType.Gold)
-    //        roulettePage.AccrueGold();
-    //}
+        if (TypePrize == PrizeType.Gold)
+            roulettePage.AccrueGold(AmountPrize);
+    }
 }
