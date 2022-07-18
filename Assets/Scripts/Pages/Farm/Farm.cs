@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Pages.Farm;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
@@ -9,7 +10,7 @@ using UnityEngine.UI;
 public class Farm : MonoBehaviour
 {
     public event UnityAction OnTimerChanged;
-    public event UnityAction OnFarmFinished;
+    public event UnityAction<Place> OnFarmFinished;
 
     [SerializeField] private TMP_Text _status;
     [SerializeField] private Image _statusWindow;
@@ -127,7 +128,7 @@ public class Farm : MonoBehaviour
         else
         {
             _status.text = "Claim your rewards";
-            OnFarmFinished?.Invoke();
+            OnFarmFinished?.Invoke(_place);
             _statusWindow.color = _finishFarmColor;
         }        
     }
